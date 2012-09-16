@@ -1,4 +1,5 @@
 from datetime import datetime, timedelta
+from django.utils import timezone
 import logging
 import re
 import traceback
@@ -15,6 +16,7 @@ from tracking.models import Visitor, UntrackedUserAgent, BannedIP
 
 title_re = re.compile('<title>(.*?)</title>')
 log = logging.getLogger('tracking.middleware')
+
 
 class VisitorTrackingMiddleware(object):
     """
@@ -93,7 +95,7 @@ class VisitorTrackingMiddleware(object):
 
         # if we get here, the URL needs to be tracked
         # determine what time it is
-        now = datetime.now()
+        now = timezone.now()    # datetime.now()
 
         attrs = {
             'session_key': session_key,
@@ -159,7 +161,7 @@ class VisitorCleanUpMiddleware:
 
         if str(timeout).isdigit():
             log.debug('Cleaning up visitors older than %s hours' % timeout)
-            timeout = datetime.now() - timedelta(hours=int(timeout))
+            timeout = timezone.now() - timedelta(hours=int(timeout))    # datetime.now()
             Visitor.objects.filter(last_update__lte=timeout).delete()
 
 class BannedIPMiddleware:
