@@ -13,6 +13,11 @@ from django.db import models
 from django.utils.translation import ugettext, ugettext_lazy as _
 from tracking import utils
 
+try:
+    from django.utils.timezone import now as right_now
+except ImportError:
+    right_now = datetime.now
+
 USE_GEOIP = getattr(settings, 'TRACKING_USE_GEOIP', False)
 CACHE_TYPE = getattr(settings, 'GEOIP_CACHE_TYPE', 4)
 
@@ -27,7 +32,7 @@ class VisitorManager(models.Manager):
         if not timeout:
             timeout = utils.get_timeout()
 
-        now = datetime.now()
+        now = right_now()
         cutoff = now - timedelta(minutes=timeout)
 
         return self.get_query_set().filter(last_update__gte=cutoff)

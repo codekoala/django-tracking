@@ -13,6 +13,11 @@ from django.http import Http404
 from tracking import utils
 from tracking.models import Visitor, UntrackedUserAgent, BannedIP
 
+try:
+    from django.utils.timezone import now as right_now
+except ImportError:
+    right_now = datetime.now
+
 title_re = re.compile('<title>(.*?)</title>')
 log = logging.getLogger('tracking.middleware')
 
@@ -93,7 +98,7 @@ class VisitorTrackingMiddleware(object):
 
         # if we get here, the URL needs to be tracked
         # determine what time it is
-        now = datetime.now()
+        now = right_now()
 
         attrs = {
             'session_key': session_key,
@@ -159,7 +164,7 @@ class VisitorCleanUpMiddleware:
 
         if str(timeout).isdigit():
             log.debug('Cleaning up visitors older than %s hours' % timeout)
-            timeout = datetime.now() - timedelta(hours=int(timeout))
+            timeout = right_now() - timedelta(hours=int(timeout))
             Visitor.objects.filter(last_update__lte=timeout).delete()
 
 class BannedIPMiddleware:
