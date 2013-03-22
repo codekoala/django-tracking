@@ -11,7 +11,8 @@ from django.db.utils import DatabaseError
 from django.http import Http404
 
 from tracking import utils
-from tracking.models import Visitor, UntrackedUserAgent, BannedIP
+from tracking.models import Visitor, UntrackedUserAgent, BannedIP, SearchItem
+from tracking.search_engines import get_engine, get_query
 
 title_re = re.compile('<title>(.*?)</title>')
 log = logging.getLogger('tracking.middleware')
@@ -95,6 +96,8 @@ class VisitorTrackingMiddleware(object):
         # determine what time it is
         now = datetime.now()
 
+        search_item = None
+
         attrs = {
             'session_key': session_key,
             'ip_address': ip_address
@@ -143,6 +146,14 @@ class VisitorTrackingMiddleware(object):
             visitor.page_views = 0
             visitor.session_start = now
 
+            # if visitor came from search engine, get query
+            if visitor.referrer != 'unknown':
+                search_engine = get_engine(visitor.referrer)
+                if search_engine:
+                    search_query = get_query(visitor.referrer, search_engine)
+                    if search_query:
+                        search_item = SearchItem(query=search_query, engine=search_engine.name)
+
         visitor.url = request.path
         visitor.page_views += 1
         visitor.last_update = now
@@ -150,6 +161,16 @@ class VisitorTrackingMiddleware(object):
             visitor.save()
         except DatabaseError:
             log.error('There was a problem saving visitor information:\n%s\n\n%s' % (traceback.format_exc(), locals()))
+        else:
+            if search_item:
+                search_item.visitor = visitor
+                try:
+                    search_item.save()
+                except DatabaseError:
+                    log.error('There was a problem saving visitor search item information:\n%s\n\n%s'
+                              % (traceback.format_exc(), locals()))
+
+
 
 class VisitorCleanUpMiddleware:
     """Clean up old visitor tracking records in the database"""
