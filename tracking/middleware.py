@@ -9,6 +9,7 @@ from django.core.cache import cache
 from django.core.urlresolvers import reverse, NoReverseMatch
 from django.db.utils import DatabaseError
 from django.http import Http404
+from django.utils import timezone
 
 from tracking import utils
 from tracking.models import Visitor, UntrackedUserAgent, BannedIP, SearchItem
@@ -94,7 +95,7 @@ class VisitorTrackingMiddleware(object):
 
         # if we get here, the URL needs to be tracked
         # determine what time it is
-        now = datetime.now()
+        now = timezone.now()
 
         search_item = None
 
