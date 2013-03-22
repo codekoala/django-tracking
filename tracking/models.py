@@ -125,3 +125,8 @@ class BannedIP(models.Model):
         ordering = ('ip_address',)
         verbose_name = _('Banned IP')
         verbose_name_plural = _('Banned IPs')
+
+class SearchItem(models.Model):
+    query = models.CharField(max_length=255)
+    engine = models.CharField(max_length=255)
+    visitor = models.ForeignKey(Visitor)
