@@ -2,6 +2,7 @@ from datetime import datetime, timedelta
 import logging
 import traceback
 
+
 from django.contrib.gis.utils import HAS_GEOIP
 
 if HAS_GEOIP:
@@ -11,6 +12,9 @@ from django.conf import settings
 from django.contrib.auth.models import User
 from django.db import models
 from django.utils.translation import ugettext, ugettext_lazy as _
+from django.contrib.contenttypes import generic
+from django.contrib.contenttypes.models import ContentType
+
 from tracking import utils
 
 USE_GEOIP = getattr(settings, 'TRACKING_USE_GEOIP', False)
@@ -130,3 +134,9 @@ class SearchItem(models.Model):
     query = models.CharField(max_length=255)
     engine = models.CharField(max_length=255)
     visitor = models.ForeignKey(Visitor)
+
+class SiteObject(models.Model):
+    visitor = models.ForeignKey(Visitor)
+    content_type = models.ForeignKey(ContentType)
+    object_id = models.PositiveIntegerField()
+    content_object = generic.GenericForeignKey('content_type', 'object_id')
