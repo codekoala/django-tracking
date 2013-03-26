@@ -141,19 +141,20 @@ class VisitorTrackingMiddleware(object):
         # at least an hour, update their referrer URL
         one_hour_ago = now - timedelta(hours=1)
         if not visitor.last_update or visitor.last_update <= one_hour_ago:
-            visitor.referrer = utils.u_clean(request.META.get('HTTP_REFERER', 'unknown')[:255])
+            referrer = request.META.get('HTTP_REFERER', 'unknown')
+            visitor.referrer = utils.u_clean(referrer[:255])
 
             # reset the number of pages they've been to
             visitor.page_views = 0
             visitor.session_start = now
 
             # if visitor came from search engine, get query
-            if visitor.referrer != 'unknown':
-                search_engine = get_engine(visitor.referrer)
+            if referrer != 'unknown':
+                search_engine = get_engine(referrer)
                 if search_engine:
-                    search_query = get_query(visitor.referrer, search_engine)
+                    search_query = get_query(referrer, search_engine)
                     if search_query:
-                        search_item = SearchItem(query=search_query, engine=search_engine.name)
+                        search_item = SearchItem(query=search_query[:255], engine=search_engine.name[:255])
 
         visitor.url = request.path
         visitor.page_views += 1
