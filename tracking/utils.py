@@ -33,6 +33,19 @@ def get_ip(request):
 
     return ip_address
 
+def get_user_agent(request):
+    return unicode(request.META.get('HTTP_USER_AGENT', '')[:255], errors='ignore')
+
+def get_session_key(request):
+    if hasattr(request, 'session') and request.session.session_key:
+        # use the current session key if we can
+        return request.session.session_key
+    # otherwise just fake a session key
+    ip_address = get_ip(request)
+    user_agent = get_user_agent(request)
+    session_key = '%s:%s' % (ip_address, user_agent)
+    return session_key[:40]
+
 def get_timeout():
     """
     Gets any specified timeout from the settings file, or use 10 minutes by

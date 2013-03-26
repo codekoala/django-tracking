@@ -62,7 +62,7 @@ class VisitorTrackingMiddleware(object):
 
         # create some useful variables
         ip_address = utils.get_ip(request)
-        user_agent = unicode(request.META.get('HTTP_USER_AGENT', '')[:255], errors='ignore')
+        user_agent = utils.get_user_agent(request)
 
         # retrieve untracked user agents from cache
         ua_key = '_tracking_untracked_uas'
@@ -79,13 +79,7 @@ class VisitorTrackingMiddleware(object):
                 log.debug('Not tracking UA "%s" because of keyword: %s' % (user_agent, ua.keyword))
                 return
 
-        if hasattr(request, 'session') and request.session.session_key:
-            # use the current session key if we can
-            session_key = request.session.session_key
-        else:
-            # otherwise just fake a session key
-            session_key = '%s:%s' % (ip_address, user_agent)
-            session_key = session_key[:40]
+        session_key = utils.get_session_key(request)
 
         # ensure that the request.path does not begin with any of the prefixes
         for prefix in self.prefixes:
