@@ -225,3 +225,12 @@ default.  If you would like to override that setting, set
 
 Good luck!  Please contact me with any questions or concerns you have with the
 project!
+
+Using Django Tracking with Celery
+=================================
+
+The VisitorTrackingMiddleware will write to the database for each user visit. This isn't a problem for most environments but for high load sites that are IO bound it can become a problem, and slow down response time for users. To mitigate this problem you can log user activity asyncronously with celery. After you have celery installed (http://docs.celeryproject.org/en/latest/getting-started/first-steps-with-celery.html) tell django-tracking which queue you'd like to log user site interactions to by settings the TRACKING_CELERY_QUEUE variable. To use the default celery queue simply set this variable to 'celery'
+
+    TRACKING_CELERY_QUEUE = 'celery'
+
+Or if you'd like to seperate this into another queue set this variable to the queue name of your choosing. 

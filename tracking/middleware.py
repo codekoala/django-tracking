@@ -10,6 +10,9 @@ from django.core.urlresolvers import reverse, NoReverseMatch
 from django.db.utils import DatabaseError
 from django.http import Http404
 
+if getattr(settings, "TRACKING_CELERY_QUEUE"):
+    from celery.contrib.methods import task
+
 from tracking import utils
 from tracking.models import Visitor, UntrackedUserAgent, BannedIP
 
@@ -151,6 +154,13 @@ class VisitorTrackingMiddleware(object):
         except DatabaseError:
             log.error('There was a problem saving visitor information:\n%s\n\n%s' % (traceback.format_exc(), locals()))
 
+
+class CeleryVisitorTrackingMiddleware(VisitorTrackingMiddleware):
+    @task(queue=settings.TRACKING_CELERY_QUEUE)
+    def process_request(self, request):
+        super(self, VisitorTrackingMiddleware).process_request(request)
+
+
 class VisitorCleanUpMiddleware:
     """Clean up old visitor tracking records in the database"""
 
@@ -161,6 +171,7 @@ class VisitorCleanUpMiddleware:
             log.debug('Cleaning up visitors older than %s hours' % timeout)
             timeout = datetime.now() - timedelta(hours=int(timeout))
             Visitor.objects.filter(last_update__lte=timeout).delete()
+
 
 class BannedIPMiddleware:
     """
