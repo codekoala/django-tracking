@@ -14,6 +14,7 @@ from django.utils.translation import ungettext
 from django.views.decorators.cache import never_cache
 from tracking.models import Visitor
 from tracking.utils import u_clean as uc
+from tracking.utils import get_now
 
 DEFAULT_TRACKING_TEMPLATE = getattr(settings, 'DEFAULT_TRACKING_TEMPLATE',
                                     'tracking/visitor_map.html')
@@ -52,7 +53,7 @@ def get_active_users(request):
     """
     if request.is_ajax():
         active = Visitor.objects.active().reverse()
-        now = datetime.now()
+        now = get_now()
 
         # we don't put the session key or IP address here for security reasons
         try:

@@ -27,10 +27,10 @@ class VisitorManager(models.Manager):
         if not timeout:
             timeout = utils.get_timeout()
 
-        now = datetime.now()
+        now = utils.get_now()
         cutoff = now - timedelta(minutes=timeout)
 
-        return self.get_query_set().filter(last_update__gte=cutoff)
+        return self.get_queryset().filter(last_update__gte=cutoff)
 
 class Visitor(models.Model):
     session_key = models.CharField(max_length=40)

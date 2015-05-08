@@ -1,6 +1,7 @@
 from django.conf import settings
 import re
 import unicodedata
+from datetime import datetime
 
 # this is not intended to be an all-knowing IP address regex
 IP_RE = re.compile('\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}')
@@ -32,6 +33,15 @@ def get_ip(request):
             pass
 
     return ip_address
+
+def get_now():
+    "Returns current date&time as native or TZ aware time based on TIME_ZONE"
+    now = datetime.now()
+    if getattr(settings, 'USE_TZ', False):
+        import pytz
+        tz = pytz.timezone(settings.TIME_ZONE)
+        now = tz.localize(now)
+    return now
 
 def get_timeout():
     """

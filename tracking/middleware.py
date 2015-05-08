@@ -95,11 +95,7 @@ class VisitorTrackingMiddleware(object):
 
         # if we get here, the URL needs to be tracked
         # determine what time it is
-        now = datetime.now()
-        if getattr(settings, 'USE_TZ', False):
-            import pytz
-            tz = pytz.timezone(settings.TIME_ZONE)
-            now = tz.localize(now)
+        now = utils.get_now()
 
         attrs = {
             'session_key': session_key,
@@ -169,11 +165,7 @@ class VisitorCleanUpMiddleware:
 
         if str(timeout).isdigit():
             log.debug('Cleaning up visitors older than %s hours' % timeout)
-            now = datetime.now()
-            if getattr(settings, 'USE_TZ', False):
-                import pytz
-                tz = pytz.timezone(settings.TIME_ZONE)
-                now = tz.localize(now)
+            now = utils.get_now()
             timeout = now - timedelta(hours=int(timeout))
             Visitor.objects.filter(last_update__lte=timeout).delete()
 
