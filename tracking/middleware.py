@@ -169,7 +169,12 @@ class VisitorCleanUpMiddleware:
 
         if str(timeout).isdigit():
             log.debug('Cleaning up visitors older than %s hours' % timeout)
-            timeout = datetime.now() - timedelta(hours=int(timeout))
+            now = datetime.now()
+            if getattr(settings, 'USE_TZ', False):
+                import pytz
+                tz = pytz.timezone(settings.TIME_ZONE)
+                now = tz.localize(now)
+            timeout = now - timedelta(hours=int(timeout))
             Visitor.objects.filter(last_update__lte=timeout).delete()
 
 class BannedIPMiddleware:
