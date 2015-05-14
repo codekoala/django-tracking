@@ -116,7 +116,7 @@ class UntrackedUserAgent(models.Model):
         verbose_name_plural = _('Untracked User-Agents')
 
 class BannedIP(models.Model):
-    ip_address = models.IPAddressField('IP Address', help_text=_('The IP address that should be banned'))
+    ip_address = models.GenericIPAddressField('IP Address', help_text=_('The IP address that should be banned'))
 
     def __unicode__(self):
         return self.ip_address
