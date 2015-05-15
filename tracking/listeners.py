@@ -15,13 +15,13 @@ try:
     from django.core.cache import cache
     from django.db.models.signals import post_save, post_delete
 
-    from tracking.models import UntrackedUserAgent, BannedIP
 except importing_exceptions:
     pass
 else:
 
     def refresh_untracked_user_agents(sender, instance, created=False, **kwargs):
         """Updates the cache of user agents that we don't track"""
+        from tracking.models import UntrackedUserAgent
 
         log.debug('Updating untracked user agents cache')
         cache.set('_tracking_untracked_uas',
@@ -30,6 +30,7 @@ else:
 
     def refresh_banned_ips(sender, instance, created=False, **kwargs):
         """Updates the cache of banned IP addresses"""
+        from tracking.models import BannedIP
 
         log.debug('Updating banned IP cache')
         cache.set('_tracking_banned_ips',
