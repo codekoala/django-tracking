@@ -1,3 +1,11 @@
+from __future__ import unicode_literals
+from __future__ import print_function
+from __future__ import division
+from __future__ import absolute_import
+from future import standard_library
+standard_library.install_aliases()
+from builtins import str
+from builtins import *
 from django.conf import settings
 import re
 import unicodedata
@@ -70,10 +78,10 @@ def u_clean(s):
             uni = str(s).decode('utf-8')
         except UnicodeDecodeError:
             # last resort method... one character at a time (ugh)
-            if s and type(s) in (str, unicode):
+            if s and type(s) in (str, str):
                 for c in s:
                     try:
-                        uni += unicodedata.normalize('NFKC', unicode(c))
+                        uni += unicodedata.normalize('NFKC', str(c))
                     except UnicodeDecodeError:
                         uni += '-'
 

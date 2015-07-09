@@ -1,3 +1,11 @@
+from __future__ import division
+from __future__ import unicode_literals
+from __future__ import print_function
+from __future__ import absolute_import
+from future import standard_library
+standard_library.install_aliases()
+from builtins import *
+from past.utils import old_div
 from datetime import datetime
 import logging
 import traceback
@@ -82,7 +90,7 @@ def get_active_users(request):
     raise Http404
 
 def friendly_time(last_update):
-    minutes = last_update / 60
+    minutes = old_div(last_update, 60)
     seconds = last_update % 60
 
     friendly_time = []

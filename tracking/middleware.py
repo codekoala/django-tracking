@@ -1,3 +1,12 @@
+from __future__ import unicode_literals
+from __future__ import print_function
+from __future__ import division
+from __future__ import absolute_import
+from future import standard_library
+standard_library.install_aliases()
+from builtins import str
+from builtins import *
+from builtins import object
 from datetime import datetime, timedelta
 import logging
 import re
@@ -62,7 +71,7 @@ class VisitorTrackingMiddleware(object):
 
         # create some useful variables
         ip_address = utils.get_ip(request)
-        user_agent = unicode(request.META.get('HTTP_USER_AGENT', '')[:255], errors='ignore')
+        user_agent = str(request.META.get('HTTP_USER_AGENT', '')[:255], errors='ignore')
 
         # retrieve untracked user agents from cache
         ua_key = '_tracking_untracked_uas'
@@ -157,7 +166,7 @@ class VisitorTrackingMiddleware(object):
         except DatabaseError:
             log.error('There was a problem saving visitor information:\n%s\n\n%s' % (traceback.format_exc(), locals()))
 
-class VisitorCleanUpMiddleware:
+class VisitorCleanUpMiddleware(object):
     """Clean up old visitor tracking records in the database"""
 
     def process_request(self, request):
@@ -169,7 +178,7 @@ class VisitorCleanUpMiddleware:
             timeout = now - timedelta(hours=int(timeout))
             Visitor.objects.filter(last_update__lte=timeout).delete()
 
-class BannedIPMiddleware:
+class BannedIPMiddleware(object):
     """
     Raises an Http404 error for any page request from a banned IP.  IP addresses
     may be added to the list of banned IPs via the Django admin.

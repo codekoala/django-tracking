@@ -1,3 +1,12 @@
+from __future__ import division
+from __future__ import unicode_literals
+from __future__ import print_function
+from __future__ import absolute_import
+from future import standard_library
+standard_library.install_aliases()
+from builtins import *
+from builtins import object
+from past.utils import old_div
 from datetime import datetime, timedelta
 import logging
 import traceback
@@ -55,9 +64,9 @@ class Visitor(models.Model):
         if self.session_start:
             seconds = (self.last_update - self.session_start).seconds
 
-            hours = seconds / 3600
+            hours = old_div(seconds, 3600)
             seconds -= hours * 3600
-            minutes = seconds / 60
+            minutes = old_div(seconds, 60)
             seconds -= minutes * 60
 
             return u'%i:%02i:%02i' % (hours, minutes, seconds)
@@ -96,13 +105,13 @@ class Visitor(models.Model):
         clean = {}
         if not self.geoip_data: return {}
 
-        for key,value in self.geoip_data.items():
+        for key,value in list(self.geoip_data.items()):
             clean[key] = utils.u_clean(value)
         return clean
 
     geoip_data_json = property(_get_geoip_data_json)
 
-    class Meta:
+    class Meta(object):
         ordering = ('-last_update',)
         unique_together = ('session_key', 'ip_address',)
 
@@ -112,7 +121,7 @@ class UntrackedUserAgent(models.Model):
     def __unicode__(self):
         return self.keyword
 
-    class Meta:
+    class Meta(object):
         ordering = ('keyword',)
         verbose_name = _('Untracked User-Agent')
         verbose_name_plural = _('Untracked User-Agents')
@@ -123,7 +132,7 @@ class BannedIP(models.Model):
     def __unicode__(self):
         return self.ip_address
 
-    class Meta:
+    class Meta(object):
         ordering = ('ip_address',)
         verbose_name = _('Banned IP')
         verbose_name_plural = _('Banned IPs')
