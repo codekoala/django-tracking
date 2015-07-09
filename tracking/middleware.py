@@ -71,7 +71,7 @@ class VisitorTrackingMiddleware(object):
 
         # create some useful variables
         ip_address = utils.get_ip(request)
-        user_agent = str(request.META.get('HTTP_USER_AGENT', '')[:255], errors='ignore')
+        user_agent = request.META.get('HTTP_USER_AGENT', '')[:255]
 
         # retrieve untracked user agents from cache
         ua_key = '_tracking_untracked_uas'

@@ -71,19 +71,14 @@ def u_clean(s):
     uni = ''
     try:
         # try this first
-        uni = str(s).decode('iso-8859-1')
+        uni = str(s)
     except UnicodeDecodeError:
-        try:
-            # try utf-8 next
-            uni = str(s).decode('utf-8')
-        except UnicodeDecodeError:
-            # last resort method... one character at a time (ugh)
-            if s and type(s) in (str, str):
-                for c in s:
-                    try:
-                        uni += unicodedata.normalize('NFKC', str(c))
-                    except UnicodeDecodeError:
-                        uni += '-'
+        # last resort method... one character at a time (ugh)
+        if s and type(s) in (str, str):
+            for c in s:
+                try:
+                    uni += unicodedata.normalize('NFKC', str(c))
+                except UnicodeDecodeError:
+                    uni += '-'
 
     return uni.encode('ascii', 'xmlcharrefreplace')
-
