@@ -6,7 +6,7 @@ from future import standard_library
 standard_library.install_aliases()
 from builtins import str
 from builtins import *
-VERSION = (0, 5, 6)
+VERSION = (0, 5, 7)
 
 
 def get_version():
