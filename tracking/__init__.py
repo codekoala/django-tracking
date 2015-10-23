@@ -6,7 +6,7 @@
 # standard_library.install_aliases()
 # from builtins import str
 # from builtins import *
-VERSION = (0, 5, 7)
+VERSION = (0, 5, 8)
 
 
 def get_version():
