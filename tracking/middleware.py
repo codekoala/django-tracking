@@ -158,7 +158,7 @@ class VisitorTrackingMiddleware(MiddlewareMixin):
         except DatabaseError:
             log.error('There was a problem saving visitor information:\n%s\n\n%s' % (traceback.format_exc(), locals()))
 
-class VisitorCleanUpMiddleware:
+class VisitorCleanUpMiddleware(MiddlewareMixin):
     """Clean up old visitor tracking records in the database"""
 
     def process_request(self, request):
@@ -169,7 +169,7 @@ class VisitorCleanUpMiddleware:
             timeout = timezone.localtime(timezone.now()) - timedelta(hours=int(timeout))
             Visitor.objects.filter(last_update__lte=timeout).delete()
 
-class BannedIPMiddleware:
+class BannedIPMiddleware(MiddlewareMixin):
     """
     Raises an Http404 error for any page request from a banned IP.  IP addresses
     may be added to the list of banned IPs via the Django admin.
