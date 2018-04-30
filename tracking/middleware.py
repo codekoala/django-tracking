@@ -18,8 +18,13 @@ from tracking.models import Visitor, UntrackedUserAgent, BannedIP
 title_re = re.compile('<title>(.*?)</title>')
 log = logging.getLogger('tracking.middleware')
 
+try:
+    from django.utils.deprecation import MiddlewareMixin
+except ImportError:  # Django < 1.10
+    MiddlewareMixin = object
 
-class VisitorTrackingMiddleware(object):
+
+class VisitorTrackingMiddleware(MiddlewareMixin):
     """
     Keeps track of your active users.  Anytime a visitor accesses a valid URL,
     their unique record will be updated with the page they're on and the last
