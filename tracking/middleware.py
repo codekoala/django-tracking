@@ -1,4 +1,5 @@
-from datetime import datetime, timedelta
+from datetime import timedelta
+from django.utils import timezone
 import logging
 import re
 import traceback
@@ -7,14 +8,16 @@ from django.conf import settings
 from django.contrib.auth.models import AnonymousUser
 from django.core.cache import cache
 from django.core.urlresolvers import reverse, NoReverseMatch
-from django.db.utils import DatabaseError
+from django.db.utils import DatabaseError, IntegrityError
 from django.http import Http404
+from django.db import transaction
 
 from tracking import utils
 from tracking.models import Visitor, UntrackedUserAgent, BannedIP
 
 title_re = re.compile('<title>(.*?)</title>')
 log = logging.getLogger('tracking.middleware')
+
 
 class VisitorTrackingMiddleware(object):
     """
@@ -55,9 +58,6 @@ class VisitorTrackingMiddleware(object):
         return self._prefixes
 
     def process_request(self, request):
-        # don't process AJAX requests
-        if request.is_ajax(): return
-
         # create some useful variables
         ip_address = utils.get_ip(request)
         try:
@@ -79,13 +79,9 @@ class VisitorTrackingMiddleware(object):
                 log.debug('Not tracking UA "%s" because of keyword: %s' % (user_agent, ua.keyword))
                 return
 
-        if hasattr(request, 'session') and request.session.session_key:
-            # use the current session key if we can
-            session_key = request.session.session_key
-        else:
-            # otherwise just fake a session key
-            session_key = '%s:%s' % (ip_address, user_agent)
-            session_key = session_key[:40]
+        if not request.session.session_key:
+            request.session.save()
+        session_key = request.session.session_key
 
         # ensure that the request.path does not begin with any of the prefixes
         for prefix in self.prefixes:
@@ -95,7 +91,7 @@ class VisitorTrackingMiddleware(object):
 
         # if we get here, the URL needs to be tracked
         # determine what time it is
-        now = datetime.now()
+        now=timezone.localtime(timezone.now())
 
         attrs = {
             'session_key': session_key,
@@ -120,9 +116,9 @@ class VisitorTrackingMiddleware(object):
                 visitor.session_key = session_key
                 log.debug('Using existing visitor for IP %s / UA %s: %s' % (ip_address, user_agent, visitor.id))
             else:
-                # it's probably safe to assume that the visitor is brand new
-                visitor = Visitor(**attrs)
-                log.debug('Created a new visitor: %s' % attrs)
+                visitor, created = Visitor.objects.get_or_create(**attrs)
+                if created:
+                    log.debug('Created a new visitor: %s' % attrs)
         except:
             return
 
@@ -149,7 +145,11 @@ class VisitorTrackingMiddleware(object):
         visitor.page_views += 1
         visitor.last_update = now
         try:
+            sid = transaction.savepoint()
             visitor.save()
+            transaction.savepoint_commit(sid)
+        except IntegrityError:
+            transaction.savepoint_rollback(sid)
         except DatabaseError:
             log.error('There was a problem saving visitor information:\n%s\n\n%s' % (traceback.format_exc(), locals()))
 
@@ -161,7 +161,7 @@ class VisitorCleanUpMiddleware:
 
         if str(timeout).isdigit():
             log.debug('Cleaning up visitors older than %s hours' % timeout)
-            timeout = datetime.now() - timedelta(hours=int(timeout))
+            timeout = timezone.localtime(timezone.now()) - timedelta(hours=int(timeout))
             Visitor.objects.filter(last_update__lte=timeout).delete()
 
 class BannedIPMiddleware:

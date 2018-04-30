@@ -2,12 +2,21 @@ import logging
 
 log = logging.getLogger('tracking.listeners')
 
+importing_exceptions = (ImportError, )
+#Try to have the ImproperlyConfigured error available to catch that error during package installation
+#...looks like newer versions of Django might have broken only receiving an ImportError 
+try:
+    from django.core.exceptions import ImproperlyConfigured
+    importing_exceptions = (ImportError, ImproperlyConfigured)
+except ImportError: 
+    pass
+
 try:
     from django.core.cache import cache
     from django.db.models.signals import post_save, post_delete
 
     from tracking.models import UntrackedUserAgent, BannedIP
-except ImportError:
+except importing_exceptions:
     pass
 else:
 

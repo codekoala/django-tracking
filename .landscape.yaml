@@ -1,0 +1,4 @@
+ignore-paths:
+  - south_migrations
+  - migrations
+  - example

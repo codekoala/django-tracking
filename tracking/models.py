@@ -1,14 +1,15 @@
-from datetime import datetime, timedelta
+from datetime import timedelta
+from django.utils import timezone
 import logging
 import traceback
 
-from django.contrib.gis.utils import HAS_GEOIP
-
-if HAS_GEOIP:
-    from django.contrib.gis.utils import GeoIP, GeoIPException
-
-from django.conf import settings
-from django.contrib.auth.models import User
+from django.contrib.gis.geoip import GeoIP, GeoIPException
+try:
+    from django.conf import settings
+    User = settings.AUTH_USER_MODEL
+except AttributeError:
+    from django.conf import settings
+    from django.contrib.auth.models import User
 from django.db import models
 from django.utils.translation import ugettext, ugettext_lazy as _
 from tracking import utils
@@ -27,15 +28,15 @@ class VisitorManager(models.Manager):
         if not timeout:
             timeout = utils.get_timeout()
 
-        now = datetime.now()
+        now = timezone.now()
         cutoff = now - timedelta(minutes=timeout)
 
-        return self.get_query_set().filter(last_update__gte=cutoff)
+        return self.get_queryset().filter(last_update__gte=cutoff)
 
 class Visitor(models.Model):
     session_key = models.CharField(max_length=40)
     ip_address = models.CharField(max_length=20)
-    user = models.ForeignKey(User, null=True)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, null=True)
     user_agent = models.CharField(max_length=255)
     referrer = models.CharField(max_length=255)
     url = models.CharField(max_length=255)
@@ -44,6 +45,11 @@ class Visitor(models.Model):
     last_update = models.DateTimeField()
 
     objects = VisitorManager()
+
+    def __init__(self, *args, **kwargs):
+        super(Visitor, self).__init__(*args, **kwargs)
+        self.session_start = timezone.now()
+        self.last_update = timezone.now()
 
     def _time_on_site(self):
         """
@@ -99,6 +105,12 @@ class Visitor(models.Model):
         return clean
 
     geoip_data_json = property(_get_geoip_data_json)
+    def __unicode__(self):
+        return u'{0} at {1} '.format(
+        self.user.username,
+        self.ip_address
+    )
+
 
     class Meta:
         ordering = ('-last_update',)
@@ -116,7 +128,7 @@ class UntrackedUserAgent(models.Model):
         verbose_name_plural = _('Untracked User-Agents')
 
 class BannedIP(models.Model):
-    ip_address = models.IPAddressField('IP Address', help_text=_('The IP address that should be banned'))
+    ip_address = models.GenericIPAddressField('IP Address', help_text=_('The IP address that should be banned'))
 
     def __unicode__(self):
         return self.ip_address

@@ -1,4 +1,5 @@
 from datetime import datetime
+from django.utils import timezone
 import logging
 import traceback
 
@@ -6,7 +7,10 @@ from django.conf import settings
 from django.http import Http404, HttpResponse
 from django.shortcuts import render_to_response
 from django.template import RequestContext, Context, loader
-from django.utils.simplejson import JSONEncoder
+try:
+    from json import JSONEncoder #Python 2.6
+except ImportError:
+    from django.utils.simplejson import JSONEncoder #Older Django
 from django.utils.translation import ungettext
 from django.views.decorators.cache import never_cache
 from tracking.models import Visitor
@@ -49,7 +53,7 @@ def get_active_users(request):
     """
     if request.is_ajax():
         active = Visitor.objects.active().reverse()
-        now = datetime.now()
+        now = timezone.now()
 
         # we don't put the session key or IP address here for security reasons
         try:
