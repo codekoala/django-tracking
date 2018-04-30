@@ -63,7 +63,7 @@ class VisitorTrackingMiddleware(object):
         try:
             user_agent = unicode(request.META.get('HTTP_USER_AGENT', '')[:255], errors='ignore')
         except NameError:
-            user_agent = (request.META.get('HTTP_USER_AGENT', '')[:255]).decode("utf-8", "ignore")
+            user_agent = (request.META.get('HTTP_USER_AGENT', '')[:255]).encode().decode("utf-8", "ignore")
         # retrieve untracked user agents from cache
         ua_key = '_tracking_untracked_uas'
         untracked = cache.get(ua_key)
