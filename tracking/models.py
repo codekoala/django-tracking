@@ -107,7 +107,7 @@ class Visitor(models.Model):
     geoip_data_json = property(_get_geoip_data_json)
     def __str__(self):
         return u'{0} at {1} '.format(
-        self.user.username,
+        self.user.username if self.user else 'AnonymousUser',
         self.ip_address
     )
 
