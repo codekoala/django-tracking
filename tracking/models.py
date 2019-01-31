@@ -3,7 +3,7 @@ from django.utils import timezone
 import logging
 import traceback
 
-from django.contrib.gis.geoip import GeoIP, GeoIPException
+from django.contrib.gis.geoip2 import GeoIP2 as  GeoIP
 try:
     from django.conf import settings
     User = settings.AUTH_USER_MODEL
@@ -33,10 +33,11 @@ class VisitorManager(models.Manager):
 
         return self.get_queryset().filter(last_update__gte=cutoff)
 
+
 class Visitor(models.Model):
     session_key = models.CharField(max_length=40)
     ip_address = models.CharField(max_length=20)
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, null=True)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, on_delete=models.SET_NULL)
     user_agent = models.CharField(max_length=255)
     referrer = models.CharField(max_length=255)
     url = models.CharField(max_length=255)
@@ -84,7 +85,7 @@ class Visitor(models.Model):
             try:
                 gip = GeoIP(cache=CACHE_TYPE)
                 self._geoip_data = gip.city(self.ip_address)
-            except GeoIPException:
+            except Exception:
                 # don't even bother...
                 log.error('Error getting GeoIP data for IP "%s": %s' % (self.ip_address, traceback.format_exc()))
 
@@ -93,7 +94,7 @@ class Visitor(models.Model):
     geoip_data = property(_get_geoip_data)
 
     def _get_geoip_data_json(self):
-        """
+        """ 
         Cleans out any dirty unicode characters to make the geoip data safe for
         JSON encoding.
         """
