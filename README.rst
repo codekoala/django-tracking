@@ -1,21 +1,34 @@
-``django-tracking`` is a simple attempt at keeping track of visitors to
-Django-powered Web sites.  It also offers basic blacklisting capabilities.
+``django-tracking`` is a simple attempt at keeping track of visitors
+to django-powered Web sites.  It also offers basic blacklisting
+capabilities.
 
-The offial repository for ``django-tracking`` is at
-http://bitbucket.org/codekoala/django-tracking.  Please file any tickets there.
+Authored by `Josh VanderLinden <http://www.codekoala.com//>`_, and some great
+`contributors <https://github.com/codekoala/django-tracking/contributors>`_.
+
+.. image:: https://img.shields.io/pypi/v/django-tracking.svg
+    :target: https://pypi.python.org/pypi/django-tracking/
+
+.. image:: https://img.shields.io/pypi/dm/django-tracking.svg
+    :target: https://pypi.python.org/pypi/django-tracking/
+
+.. image:: https://img.shields.io/github/license/bashu/django-tracking.svg
+    :target: https://pypi.python.org/pypi/django-tracking/
+
+.. image:: https://landscape.io/github/bashu/django-tracking/develop/landscape.svg?style=flat
+    :target: https://landscape.io/github/bashu/django-tracking/develop
 
 Features
-========
+--------
 
 * Tracks the following information about your visitors:
 
-    * Session key
-    * IP address
-    * User agent
-    * Whether or not they are a registered user and logged in
-    * Where they came from (http-referer)
-    * What page on your site they last visited
-    * How many pages on your site they have visited
+  * Session key
+  * IP address
+  * User agent
+  * Whether or not they are a registered user and logged in
+  * Where they came from (HTTP-REFERER)
+  * What page on your site they last visited
+  * How many pages on your site they have visited
 
 * Allows user-agent filtering for visitor tracking
 * Automatic clean-up of old visitor records
@@ -24,8 +37,8 @@ Features
 * The ability to have a live feed of active users on your website
 * Template tags to:
 
-    * display how many active users there are on your site
-    * determine how many active users are on the same page within your site
+  * display how many active users there are on your site
+  * determine how many active users are on the same page within your site
 
 * Optional "Active Visitors Map" to see where visitors are in the world
 
@@ -200,7 +213,7 @@ If you also want to show how many people are looking at the same page::
     {% visitors_on_page as same_page %}
     <p>
         {{ same_page }} of {{ visitors }} active user{{ visitors|pluralize }}
-        {{ same_page|pluralize:"is,are" }} reading this page
+        {% ifequal same_page 1 %}is{% else %}are{% endifequal %} reading this page
     </p>
 
 If you don't want particular areas of your site to be tracked, you may define a
@@ -223,5 +236,3 @@ default.  If you would like to override that setting, set
 ``TRACKING_CLEANUP_TIMEOUT`` to however many hours you want in your
 ``settings.py``.
 
-Good luck!  Please contact me with any questions or concerns you have with the
-project!
