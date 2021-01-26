@@ -58,7 +58,7 @@ $('html').ajaxSend(function(event, xhr, settings) {
 function createMarkers() {
     // Pull back all active users and create markers for them
     $.ajax({
-        url : '{% url tracking-get-active-users %}',
+        url : '{% url "tracking-get-active-users" %}',
         type : 'POST',
         dataType : 'json',
         data: {},
