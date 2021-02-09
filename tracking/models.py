@@ -1,14 +1,15 @@
-from datetime import datetime, timedelta
+from datetime import timedelta
+from django.utils import timezone
 import logging
 import traceback
 
-from django.contrib.gis.utils import HAS_GEOIP
-
-if HAS_GEOIP:
-    from django.contrib.gis.utils import GeoIP, GeoIPException
-
-from django.conf import settings
-from django.contrib.auth.models import User
+from django.contrib.gis.geoip2 import GeoIP2 as  GeoIP
+try:
+    from django.conf import settings
+    User = settings.AUTH_USER_MODEL
+except AttributeError:
+    from django.conf import settings
+    from django.contrib.auth.models import User
 from django.db import models
 from django.utils.translation import ugettext, ugettext_lazy as _
 from tracking import utils
@@ -27,15 +28,16 @@ class VisitorManager(models.Manager):
         if not timeout:
             timeout = utils.get_timeout()
 
-        now = datetime.now()
+        now = timezone.now()
         cutoff = now - timedelta(minutes=timeout)
 
-        return self.get_query_set().filter(last_update__gte=cutoff)
+        return self.get_queryset().filter(last_update__gte=cutoff)
+
 
 class Visitor(models.Model):
     session_key = models.CharField(max_length=40)
     ip_address = models.CharField(max_length=20)
-    user = models.ForeignKey(User, null=True)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, on_delete=models.SET_NULL)
     user_agent = models.CharField(max_length=255)
     referrer = models.CharField(max_length=255)
     url = models.CharField(max_length=255)
@@ -44,6 +46,11 @@ class Visitor(models.Model):
     last_update = models.DateTimeField()
 
     objects = VisitorManager()
+
+    def __init__(self, *args, **kwargs):
+        super(Visitor, self).__init__(*args, **kwargs)
+        self.session_start = timezone.now()
+        self.last_update = timezone.now()
 
     def _time_on_site(self):
         """
@@ -78,7 +85,7 @@ class Visitor(models.Model):
             try:
                 gip = GeoIP(cache=CACHE_TYPE)
                 self._geoip_data = gip.city(self.ip_address)
-            except GeoIPException:
+            except Exception:
                 # don't even bother...
                 log.error('Error getting GeoIP data for IP "%s": %s' % (self.ip_address, traceback.format_exc()))
 
@@ -87,7 +94,7 @@ class Visitor(models.Model):
     geoip_data = property(_get_geoip_data)
 
     def _get_geoip_data_json(self):
-        """
+        """ 
         Cleans out any dirty unicode characters to make the geoip data safe for
         JSON encoding.
         """
@@ -99,6 +106,12 @@ class Visitor(models.Model):
         return clean
 
     geoip_data_json = property(_get_geoip_data_json)
+    def __str__(self):
+        return u'{0} at {1} '.format(
+        self.user.username if self.user else 'AnonymousUser',
+        self.ip_address
+    )
+
 
     class Meta:
         ordering = ('-last_update',)
@@ -107,7 +120,7 @@ class Visitor(models.Model):
 class UntrackedUserAgent(models.Model):
     keyword = models.CharField(_('keyword'), max_length=100, help_text=_('Part or all of a user-agent string.  For example, "Googlebot" here will be found in "Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)" and that visitor will not be tracked.'))
 
-    def __unicode__(self):
+    def __str__(self):
         return self.keyword
 
     class Meta:
@@ -116,9 +129,9 @@ class UntrackedUserAgent(models.Model):
         verbose_name_plural = _('Untracked User-Agents')
 
 class BannedIP(models.Model):
-    ip_address = models.IPAddressField('IP Address', help_text=_('The IP address that should be banned'))
+    ip_address = models.GenericIPAddressField('IP Address', help_text=_('The IP address that should be banned'))
 
-    def __unicode__(self):
+    def __str__(self):
         return self.ip_address
 
     class Meta:

@@ -1,4 +1,7 @@
-from django.conf.urls.defaults import *
+try:
+    from django.conf.urls import patterns, url, include
+except ImportError:  # Pre-Django 1.4 version
+    from django.conf.urls.defaults import patterns, url, include
 from django.conf import settings
 from tracking import views
 
